@@ -38,10 +38,9 @@ pipeline {
 
       stage('Deploy to EC2') {
     steps {
+        echo 'Deploying to EC2 via Git Bash SSH...'
         bat """
-        tar -czf dist.tar.gz dist
-        scp -i C:\\ssh\\jenkins-ec2-key.pem dist.tar.gz ec2-user@16.170.158.81:~/
-        ssh -i C:\\ssh\\jenkins-ec2-key.pem ec2-user@16.170.158.81 "rm -rf ~/app/* && tar -xzf dist.tar.gz -C ~/app"
+        "C:\\Program Files\\Git\\bin\\bash.exe" -lc "scp -i /c/ssh/jenkins-ec2-key.pem -o StrictHostKeyChecking=no -r dist/* ec2-user@16.170.158.81:/home/ec2-user/app/"
         """
     }
 }
