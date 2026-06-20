@@ -23,6 +23,9 @@ pipeline {
             steps {
                 withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY')]) {
                     bat '''
+                        icacls %SSH_KEY% /inheritance:r
+                        icacls %SSH_KEY% /grant:r %USERNAME%:F
+                        
                         set AWS_ACCESS_KEY_ID=%AWS_CREDENTIALS_USR%
                         set AWS_SECRET_ACCESS_KEY=%AWS_CREDENTIALS_PSW%
                         
