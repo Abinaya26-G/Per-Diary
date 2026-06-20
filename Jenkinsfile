@@ -1,53 +1,63 @@
 pipeline {
     agent any
 
+    tools {
+        nodejs "NodeJS"   // Make sure NodeJS is configured in Jenkins Global Tools
+    }
+
     environment {
-        AWS_CREDENTIALS = credentials('aws-credentials')
-        EC2_IP = '16.170.158.81'
+        EC2_USER = "ubuntu"
+        EC2_HOST = "YOUR_EC2_PUBLIC_IP"
+        APP_DIR  = "/home/ubuntu/app"
     }
 
     stages {
+
         stage('Checkout') {
             steps {
-                checkout scm
+                git branch: 'main',
+                    url: 'https://github.com/Abinaya26-G/Per-Diary.git'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                echo 'Installing dependencies...'
+                sh 'npm install'
             }
         }
 
         stage('Build') {
             steps {
                 echo 'Building application...'
+                sh 'npm run build || echo "No build step found"'
             }
         }
 
         stage('Deploy to EC2') {
             steps {
-                withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY')]) {
-                    powershell '''
-                        # Fix SSH key permissions
-                        $path = $env:SSH_KEY
-                        $acl = Get-Acl $path
-                        
-                        # Remove all existing permissions
-                        $acl.SetAccessRuleProtection($true, $false)
-                        
-                        # Add only current user with full control
-                        $rule = New-Object System.Security.AccessControl.FileSystemAccessRule(
-                            $env:USERNAME, 
-                            "FullControl", 
-                            "Allow"
-                        )
-                        $acl.SetAccessRule($rule)
-                        Set-Acl $path $acl
-                        
-                        # Set environment variables
-                        $env:AWS_ACCESS_KEY_ID = $env:AWS_CREDENTIALS_USR
-                        $env:AWS_SECRET_ACCESS_KEY = $env:AWS_CREDENTIALS_PSW
-                        
-                        Write-Host "Deploying to EC2..."
-                        
-                        # Use scp with the fixed key
-                        scp -i $env:SSH_KEY -o StrictHostKeyChecking=no -r . ec2-user@$env:EC2_IP:/home/ec2-user/app/
-                    '''
+                echo 'Deploying to EC2...'
+
+                sshagent(['ec2-ssh-key']) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} '
+                            if [ ! -d ${APP_DIR} ]; then
+                                mkdir -p ${APP_DIR}
+                            fi
+
+                            cd ${APP_DIR}
+
+                            if [ ! -d .git ]; then
+                                git clone https://github.com/Abinaya26-G/Per-Diary.git .
+                            else
+                                git pull origin main
+                            fi
+
+                            npm install
+
+                            pm2 restart app || pm2 start npm --name "app" -- start
+                        '
+                    """
                 }
             }
         }
@@ -55,10 +65,10 @@ pipeline {
 
     post {
         success {
-            echo 'Deployment successful!'
+            echo '✅ Deployment Successful!'
         }
         failure {
-            echo 'Deployment failed!'
+            echo '❌ Deployment Failed!'
         }
     }
 }
