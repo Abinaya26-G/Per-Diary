@@ -2,12 +2,12 @@ pipeline {
     agent any
 
     tools {
-        nodejs "NodeJS"   // Make sure NodeJS is configured in Jenkins Global Tools
+        nodejs "NodeJS_18"   // Make sure NodeJS is configured in Jenkins Global Tools
     }
 
     environment {
         EC2_USER = "ubuntu"
-        EC2_HOST = "YOUR_EC2_PUBLIC_IP"
+        EC2_HOST = "16.170.158.81"
         APP_DIR  = "/home/ubuntu/app"
     }
 
