@@ -36,15 +36,12 @@ pipeline {
             }
         }
 
-       stage('Deploy to EC2') {
+      stage('Deploy to EC2') {
     steps {
-        echo 'Deploying to EC2...'
         bat """
-        powershell -Command ^
-        "$key='C:\\ssh\\jenkins-ec2-key.pem'; ^
-        $target='ec2-user@16.170.158.81'; ^
-        $src='dist/*'; ^
-        scp -o StrictHostKeyChecking=no -i $key -r $src $target:~/app/"
+        tar -czf dist.tar.gz dist
+        scp -i C:\\ssh\\jenkins-ec2-key.pem dist.tar.gz ec2-user@16.170.158.81:~/
+        ssh -i C:\\ssh\\jenkins-ec2-key.pem ec2-user@16.170.158.81 "rm -rf ~/app/* && tar -xzf dist.tar.gz -C ~/app"
         """
     }
 }
