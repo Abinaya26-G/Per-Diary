@@ -1,5 +1,5 @@
 const MOODS = [
-  { emoji: '😊', label: 'Happy' },
+  { emoji: '😊', label: 'Hap' },
   { emoji: '😌', label: 'Calm' },
   { emoji: '😐', label: 'Neutral' },
   { emoji: '😢', label: 'Sad' },
