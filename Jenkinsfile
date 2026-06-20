@@ -4,13 +4,13 @@ pipeline {
     environment {
         EC2_USER = "ec2-user"
         EC2_HOST = "16.170.158.81"
-        KEY_PATH = "C:\\ProgramData\\Jenkins\\.jenkins\\jenkins-ec2-key.pem"
+        KEY_PATH = "C:\\ssh\\jenkins-ec2-key.pem"
         REMOTE_DIR = "~/app"
     }
 
     stages {
 
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
                 git url: 'https://github.com/Abinaya26-G/Per-Diary.git', branch: 'main'
             }
@@ -48,7 +48,7 @@ pipeline {
 
     post {
         success {
-            echo '🚀 SUCCESS: Deployment completed!'
+            echo '🚀 SUCCESS: Deployment completed successfully!'
         }
         failure {
             echo '❌ FAILURE: Check logs'
