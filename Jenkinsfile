@@ -36,14 +36,14 @@ pipeline {
             }
         }
 
-        stage('Deploy to EC2') {
-            steps {
-                echo 'Deploying to EC2...'
-                bat """
-                scp -i %KEY_PATH% -o StrictHostKeyChecking=no -r dist/* %EC2_USER%@%EC2_HOST%:%REMOTE_DIR%
-                """
-            }
-        }
+       stage('Deploy to EC2') {
+    steps {
+        echo 'Deploying to EC2 using PowerShell...'
+        bat """
+        powershell -Command "scp -i C:\\ssh\\jenkins-ec2-key.pem -o StrictHostKeyChecking=no -r dist/* ec2-user@16.170.158.81:~/app/"
+        """
+    }
+}
     }
 
     post {
