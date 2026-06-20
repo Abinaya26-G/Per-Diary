@@ -2,12 +2,12 @@ pipeline {
     agent any
 
     tools {
-        nodejs "NodeJS_18"   // Make sure NodeJS is configured in Jenkins Global Tools
+        nodejs "NodeJS_18"
     }
 
     environment {
         EC2_USER = "ubuntu"
-        EC2_HOST = "16.170.158.81"
+        EC2_HOST = "YOUR_EC2_PUBLIC_IP"
         APP_DIR  = "/home/ubuntu/app"
     }
 
@@ -23,40 +23,34 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 echo 'Installing dependencies...'
-                sh 'npm install'
+                bat 'npm install'
             }
         }
 
         stage('Build') {
             steps {
                 echo 'Building application...'
-                sh 'npm run build || echo "No build step found"'
+                bat 'npm run build || echo No build step'
             }
         }
 
         stage('Deploy to EC2') {
             steps {
-                echo 'Deploying to EC2...'
-
                 sshagent(['ec2-ssh-key']) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} '
-                            if [ ! -d ${APP_DIR} ]; then
-                                mkdir -p ${APP_DIR}
-                            fi
-
+                    bat """
+                        ssh -o StrictHostKeyChecking=no ubuntu@${EC2_HOST} "
+                            if not exist ${APP_DIR} mkdir ${APP_DIR}
                             cd ${APP_DIR}
 
-                            if [ ! -d .git ]; then
+                            if not exist .git (
                                 git clone https://github.com/Abinaya26-G/Per-Diary.git .
-                            else
+                            ) else (
                                 git pull origin main
-                            fi
+                            )
 
                             npm install
-
-                            pm2 restart app || pm2 start npm --name "app" -- start
-                        '
+                            pm2 restart app || pm2 start npm --name app -- start
+                        "
                     """
                 }
             }
