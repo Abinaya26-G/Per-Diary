@@ -1,16 +1,18 @@
 pipeline {
     agent any
 
-    tools {
-        nodejs "NodeJS_18"
+    environment {
+        EC2_USER = "ec2-user"
+        EC2_HOST = "16.170.158.81"
+        KEY_PATH = "C:\\ProgramData\\Jenkins\\.jenkins\\jenkins-ec2-key.pem"
+        REMOTE_DIR = "~/app"
     }
 
     stages {
 
         stage('Checkout') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/Abinaya26-G/Per-Diary.git'
+                git url: 'https://github.com/Abinaya26-G/Per-Diary.git', branch: 'main'
             }
         }
 
@@ -21,7 +23,7 @@ pipeline {
             }
         }
 
-        stage('Build') {
+        stage('Build Application') {
             steps {
                 echo 'Building application...'
                 bat 'npm run build'
@@ -33,15 +35,23 @@ pipeline {
                 bat 'dir dist'
             }
         }
+
+        stage('Deploy to EC2') {
+            steps {
+                echo 'Deploying to EC2...'
+                bat """
+                scp -i %KEY_PATH% -o StrictHostKeyChecking=no -r dist/* %EC2_USER%@%EC2_HOST%:%REMOTE_DIR%
+                """
+            }
+        }
     }
 
     post {
         success {
-            echo 'SUCCESS: Build completed!'
+            echo '🚀 SUCCESS: Deployment completed!'
         }
-
         failure {
-            echo 'FAILED: Build failed!'
+            echo '❌ FAILURE: Check logs'
         }
     }
 }
